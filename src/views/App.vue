@@ -1,28 +1,45 @@
 <script setup lang="ts">
+import { computed, type Ref, ref } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useUsersListStore } from '@/stores/usersList.ts';
+
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Password from 'primevue/password';
+import { TypeRecord } from '@/enums/enumTypeRecord.ts';
 
-import { ref } from 'vue';
+const usersListStore = useUsersListStore();
+const { dataUsersList } = storeToRefs(usersListStore);
 
-const value = ref();
-const login = ref();
-const password = ref();
-const selectedType = ref();
+const newTag = ref('');
 
 const recordTypes = ref([
   {
-    id:1,
+    id: 1,
     name: 'Локальная'
   },
   {
-    id:2,
+    id: 2,
     name: 'LDPA'
   }
-])
+]);
+
+const removeUser = (id: number) => {
+  usersListStore.removeUser(id);
+};
+
+const lastId = computed(() =>
+  dataUsersList.value.length ? dataUsersList.value[dataUsersList.value.length - 1].id : 0
+);
+
+const addNewUser = () => {
+    usersListStore.addUser(lastId.value);
+};
+
+
 </script>
 
 <template>
@@ -33,7 +50,7 @@ const recordTypes = ref([
           <div>
             Simple Card
           </div>
-          <Button icon="pi pi-plus" severity="secondary" aria-label="Bookmark" />
+          <Button @click="addNewUser" icon="pi pi-plus" severity="secondary" aria-label="Bookmark" />
         </div>
       </template>
       <template #content>
@@ -42,24 +59,24 @@ const recordTypes = ref([
             используйте разделитель ;
           </Message>
           <div class="card__list">
-            <div class="card__list--row">
+            <div v-for="(user, index) in dataUsersList" :key="user.id" class="card__list--row">
               <div class="card__list--item">
-                <label for="username">Метки</label>
-                <InputText id="username" v-model="value" aria-describedby="username-help" />
-              </div>
-              <div class="card__list--item">
-                <label for="username">Тип записи</label>
-                <Select v-model="selectedType" :options="recordTypes" optionLabel="name" optionValue="id" />
+                <label :for="`tags-${user.id}`">Метки</label>
+                <InputText :id="`tags-${user.id}`" maxlength="50" v-model="user.tags" />
               </div>
               <div class="card__list--item">
-                <label for="username">Логин</label>
-                <InputText id="username" :invalid="!login" v-model="login" aria-describedby="username-help" />
+                <label :for="`typeRecordId-${user.id}`">Тип записи</label>
+                <Select :id="`typeRecordId-${user.id}`" v-model="user.typeRecordId" :options="recordTypes" showClear optionLabel="name" optionValue="id" />
               </div>
-              <div v-if="selectedType === 1" class="card__list--item">
-                <label for="username">Пароль</label>
-                <Password  id="username" :invalid="!password" v-model="password" toggleMask :feedback="false" />
+              <div class="card__list--item">
+                <label :for="`login-${user.id}`">Логин</label>
+                <InputText :id="`login-${user.id}`" :invalid="!user.login" v-model="user.login" />
               </div>
-              <Button class="card__list--row_delete" icon="pi pi-trash" severity="danger"  aria-label="Cancel" />
+              <div v-if="user.typeRecordId === TypeRecord.local" class="card__list--item">
+                <label :for="`password-${user.id}`">Пароль</label>
+                <Password maxlength="100" :id="`password-${user.id}`" :invalid="!user.password" v-model="user.password" toggleMask :feedback="false" />
+              </div>
+              <Button @click="removeUser(user.id)"  class="card__list--row_delete" icon="pi pi-trash" severity="danger"  />
             </div>
           </div>
         </div>
@@ -74,15 +91,19 @@ const recordTypes = ref([
 
   &__list
     margin-top: 30px
+    gap: 20px
+    display: flex
+    flex-direction: column
     &--row
-      display: flex
+      display: grid
+      grid-template-columns: repeat(4, 1fr)
       gap: 20px
-      align-items: end
+      align-items: center
+      &:not(:has(.card__list--item:nth-child(4))) .card__list--item:nth-child(3)
+        grid-column: span 2
       &_delete
-        width: 30px
-        min-width: 35px
-        height: 35px
-
+        grid-column: -1
+        align-self: end
     &--item
       display: flex
       flex-direction: column
