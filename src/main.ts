@@ -1,4 +1,3 @@
-import 'primeicons/primeicons.css'
 import './assets/main.sass';
 
 import { createApp } from 'vue';
