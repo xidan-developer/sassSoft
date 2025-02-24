@@ -1,4 +1,4 @@
 export enum TypeRecord {
-  local = 1,
-  ldap = 2,
+  local = 'Локальная',
+  ldap = 'LDPA',
 }

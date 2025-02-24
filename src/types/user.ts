@@ -1,8 +1,13 @@
+
+interface Tag {
+  text: string;
+}
+
 // Интерфейс пользователя
 export interface User {
   id: number;
-  tags: string[];
+  tags: Tag[];
   typeRecordId: string;
   login: string;
-  password: string;
+  password: string| null;
 }
